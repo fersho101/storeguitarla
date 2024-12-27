@@ -1,6 +1,6 @@
-import Header from './components/Header'
+import { useState, useEffect } from 'react'
 import Guitar from './components/Guitar'
-import { useEffect, useState } from 'react'
+import Header from './components/Header'
 import { db } from './data/db'
 
 function App() {
@@ -8,13 +8,12 @@ function App() {
         const localStorageCart = localStorage.getItem('cart')
         return localStorageCart ? JSON.parse(localStorageCart) : []
     }
-    //state
 
     const [data] = useState(db)
     const [cart, setCart] = useState(initialCart)
 
-    const MAX_ITEMS = 5
     const MIN_ITEMS = 1
+    const MAX_ITEMS = 5
 
     useEffect(() => {
         localStorage.setItem('cart', JSON.stringify(cart))
@@ -23,9 +22,11 @@ function App() {
     function addToCart(item) {
         const itemExists = cart.findIndex(guitar => guitar.id === item.id)
         if (itemExists >= 0) {
-            const updateCart = [...cart]
-            updateCart[itemExists].quantity++
-            setCart(updateCart)
+            // existe en el carrito
+            if (cart[itemExists].quantity >= MAX_ITEMS) return
+            const updatedCart = [...cart]
+            updatedCart[itemExists].quantity++
+            setCart(updatedCart)
         } else {
             item.quantity = 1
             setCart([...cart, item])
@@ -36,12 +37,12 @@ function App() {
         setCart(prevCart => prevCart.filter(guitar => guitar.id !== id))
     }
 
-    function increaseQuantity(id) {
+    function decreaseQuantity(id) {
         const updatedCart = cart.map(item => {
-            if (item.id === id && item.quantity < MAX_ITEMS) {
+            if (item.id === id && item.quantity > MIN_ITEMS) {
                 return {
                     ...item,
-                    quantity: item.quantity + 1,
+                    quantity: item.quantity - 1,
                 }
             }
             return item
@@ -49,12 +50,12 @@ function App() {
         setCart(updatedCart)
     }
 
-    function decreaseQuantity(id) {
+    function increaseQuantity(id) {
         const updatedCart = cart.map(item => {
-            if (item.id === id && item.quantity > MIN_ITEMS) {
+            if (item.id === id && item.quantity < MAX_ITEMS) {
                 return {
                     ...item,
-                    quantity: item.quantity - 1,
+                    quantity: item.quantity + 1,
                 }
             }
             return item
@@ -71,8 +72,8 @@ function App() {
             <Header
                 cart={cart}
                 removeFromCart={removeFromCart}
-                increaseQuantity={increaseQuantity}
                 decreaseQuantity={decreaseQuantity}
+                increaseQuantity={increaseQuantity}
                 clearCart={clearCart}
             />
 
